@@ -114,7 +114,7 @@ epiAneufinder <- function(input, outdir, blacklist, windowSize, genome="BSgenome
       fit <- stats::loess(x ~ peaks$GC)
       correction <- mean(x) / fit$fitted
       as.integer(round(x * correction))
-    }, mc.cores = 16L), .SDcols = patterns("cell-")]
+    }, mc.cores = ncores), .SDcols = patterns("cell-")]
     saveRDS(corrected_counts, file.path(outdir,"counts_gc_corrected.rds"))
   }
 
@@ -131,17 +131,23 @@ epiAneufinder <- function(input, outdir, blacklist, windowSize, genome="BSgenome
   print(paste("Filtering empty windows,",nrow(peaks),"windows remain."))
   
   if(!file.exists(file.path(outdir,"results_gc_corrected.rds"))) {
+    # Check number of columns to parallelize over
+    cell_cols <- grep("cell-", names(peaks), value=TRUE)
+    message("Processing ", length(cell_cols), " columns with ", ncores, " cores")
     
     clusters_ad <- peaks[, mclapply(.SD, function(x) {
       peaksperchrom <- split(x, peaks$seqnames)
-      print("Calculating distance AD")
-      results <- lapply(peaksperchrom, function(x2) {
-        getbp(x2, k = k, minsize = minsize, test=test,minsizeCNV=minsizeCNV)
-      })
-    }, mc.cores = ncores), .SDcols = patterns("cell-")]
+      print(paste("Calculating distance AD for column", .BY))  # Debug print
+      results <- mclapply(peaksperchrom, function(x2) {
+        getbp(x2, k = k, minsize = minsize, test=test, minsizeCNV=minsizeCNV)
+      }, mc.cores = 1)  # Adjust inner cores if needed
+      return(results)
+    }, mc.cores = min(ncores, length(cell_cols))), .SDcols = patterns("cell-")]
     saveRDS(clusters_ad, file.path(outdir, "results_gc_corrected.rds"))
   }
-  print("Successfully identified breakpoints")
+
+
+print("Successfully identified breakpoints")
 
   if(!file.exists(file.path(outdir,"cnv_calls.rds"))) {
     names_seq <- levels(peaks$seqnames)
