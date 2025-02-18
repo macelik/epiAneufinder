@@ -114,7 +114,7 @@ epiAneufinder <- function(input, outdir, blacklist, windowSize, genome="BSgenome
       fit <- stats::loess(x ~ peaks$GC)
       correction <- mean(x) / fit$fitted
       as.integer(round(x * correction))
-    }, mc.cores = ncores), .SDcols = patterns("cell-")]
+    }, mc.cores = 16L), .SDcols = patterns("cell-")]
     saveRDS(corrected_counts, file.path(outdir,"counts_gc_corrected.rds"))
   }
 
