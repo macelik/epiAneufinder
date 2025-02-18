@@ -130,19 +130,28 @@ epiAneufinder <- function(input, outdir, blacklist, windowSize, genome="BSgenome
   
   print(paste("Filtering empty windows,",nrow(peaks),"windows remain."))
   
-  if(!file.exists(file.path(outdir,"results_gc_corrected.rds"))) {
-    # Check number of columns to parallelize over
-    cell_cols <- grep("cell-", names(peaks), value=TRUE)
-    message("Processing ", length(cell_cols), " columns with ", ncores, " cores")
-    
+  if (!file.exists(file.path(outdir, "results_gc_corrected.rds"))) {
+    # Get columns matching "cell-"
+    cell_cols <- grep("cell-", names(peaks), value = TRUE)
+    length(cell_cols)
     clusters_ad <- peaks[, mclapply(.SD, function(x) {
+      # Split data by chromosome for the current column
       peaksperchrom <- split(x, peaks$seqnames)
-      print(paste("Calculating distance AD for column", .BY))  # Debug print
-      results <- mclapply(peaksperchrom, function(x2) {
-        getbp(x2, k = k, minsize = minsize, test=test, minsizeCNV=minsizeCNV)
-      }, mc.cores = 1)  # Adjust inner cores if needed
+      
+      # Print thread info (for debugging)
+      print(paste(
+        "Calculating distance AD for column:", names(.SD),
+        "| Thread:", Sys.getpid()
+      ))
+      
+      # Process chromosomes *sequentially* for this column
+      results <- lapply(peaksperchrom, function(x2) {
+        getbp(x2, k = k, minsize = minsize, test = test, minsizeCNV = minsizeCNV)
+      })
+      
       return(results)
-    }, mc.cores = min(ncores, length(cell_cols))), .SDcols = patterns("cell-")]
+    }, mc.cores = min(ncores, length(cell_cols))), .SDcols = cell_cols]
+    
     saveRDS(clusters_ad, file.path(outdir, "results_gc_corrected.rds"))
   }
 
