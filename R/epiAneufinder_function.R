@@ -131,26 +131,23 @@ epiAneufinder <- function(input, outdir, blacklist, windowSize, genome="BSgenome
   print(paste("Filtering empty windows,",nrow(peaks),"windows remain."))
   
   if (!file.exists(file.path(outdir, "results_gc_corrected.rds"))) {
-    # Get columns matching "cell-"
+    # here get the columns
     cell_cols <- grep("cell-", names(peaks), value = TRUE)
     length(cell_cols)
     clusters_ad <- peaks[, mclapply(.SD, function(x) {
-      # Split data by chromosome for the current column
+      # sSplit data by chr for the current column
       peaksperchrom <- split(x, peaks$seqnames)
       
-      # Print thread info (for debugging)
-      print(paste(
-        "Calculating distance AD for column:", names(.SD),
-        "| Chr:", print(length(x))
-      ))
+      # this is for debugging
+      print("Calculating distance AD:")
       
-      # Process chromosomes *sequentially* for this column
+      # Process chr via lappy
       results <- lapply(peaksperchrom, function(x2) {
         getbp(x2, k = k, minsize = minsize, test = test, minsizeCNV = minsizeCNV)
       })
       
       return(results)
-    }, mc.cores = min(ncores, length(cell_cols))), .SDcols = cell_cols]
+    }, mc.cores = ncores), .SDcols = cell_cols]
     
     saveRDS(clusters_ad, file.path(outdir, "results_gc_corrected.rds"))
   }
