@@ -141,7 +141,7 @@ epiAneufinder <- function(input, outdir, blacklist, windowSize, genome="BSgenome
       # Print thread info (for debugging)
       print(paste(
         "Calculating distance AD for column:", names(.SD),
-        "| Chr:", toString(names(peaksperchrom))
+        "| Chr:", print(length(x))
       ))
       
       # Process chromosomes *sequentially* for this column
