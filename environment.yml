@@ -1,0 +1,27 @@
+name: epipar
+channels:
+  - conda-forge
+  - bioconda
+  - defaults
+  - r
+  - anaconda
+dependencies:
+  - bioconductor-genomicalignments
+  - bioconductor-summarizedexperiment
+  - bioconductor-plyranges
+  - bioconductor-rsamtools
+  - bioconductor-genomeinfodb
+  - bioconductor-bsgenome.hsapiens.ucsc.hg38
+  - bioconductor-genomicranges
+  - bioconductor-biostrings
+  - bioconductor-biocgenerics
+  - bioconductor-s4vectors
+  - bioconductor-genomicfeatures
+  - r-xml
+  - lxml
+  - notebook
+  - nb_conda_kernels
+  - r-irkernel
+  - conda-forge::r-ggdendro
+  - conda-forge::r-devtools
+  - conda-forge::r-htmltools
